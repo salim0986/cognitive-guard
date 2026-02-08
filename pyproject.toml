@@ -1,0 +1,118 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cognitive-guard"
+version = "0.1.0"
+description = "Gamified code documentation enforcer with cognitive complexity analysis"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+    { name = "Your Name", email = "your.email@example.com" }
+]
+keywords = ["documentation", "git-hooks", "code-quality", "cognitive-complexity", "cli"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+dependencies = [
+    "click>=8.1.7",
+    "rich>=13.7.0",
+    "textual>=0.47.0",
+    "gitpython>=3.1.40",
+    "radon>=6.0.1",
+    "lizard>=1.17.10",
+    "pyyaml>=6.0.1",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.3",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "black>=23.12.0",
+    "ruff>=0.1.8",
+    "mypy>=1.7.1",
+    "pre-commit>=3.6.0",
+]
+
+[project.scripts]
+cognitive-guard = "cognitive_guard.cli:main"
+cg = "cognitive_guard.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/cognitive-guard"
+Documentation = "https://cognitive-guard.readthedocs.io"
+Repository = "https://github.com/yourusername/cognitive-guard"
+Issues = "https://github.com/yourusername/cognitive-guard/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["cognitive_guard"]
+
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+    "B008",  # do not perform function calls in argument defaults
+]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = [
+    "--cov=cognitive_guard",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "-v",
+]
+
+[tool.coverage.run]
+source = ["cognitive_guard"]
+omit = ["*/tests/*", "*/test_*.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

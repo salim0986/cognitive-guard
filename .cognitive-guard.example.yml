@@ -1,0 +1,46 @@
+# Example .cognitive-guard.yml configuration
+
+# Complexity threshold (1-20)
+# Functions with complexity above this threshold require documentation
+complexity_threshold: 10
+
+# Target documentation coverage (0.0-1.0)
+# Overall project documentation goal
+target_coverage: 0.9
+
+# Languages to analyze
+languages:
+  - python
+  - javascript
+  - typescript
+  - java
+
+# File patterns to ignore
+ignore:
+  # Test files
+  - "**/test_*.py"
+  - "**/*_test.py"
+  - "**/*.test.js"
+  - "**/*.spec.ts"
+  
+  # Build artifacts
+  - "**/build/**"
+  - "**/dist/**"
+  - "**/__pycache__/**"
+  - "**/node_modules/**"
+  
+  # Migrations and generated code
+  - "**/migrations/**"
+  - "**/*_pb2.py"
+  - "**/*.generated.*"
+
+# Gamification settings
+gamification:
+  # Enable gamification features
+  enabled: true
+  
+  # Show achievement notifications
+  show_achievements: true
+  
+  # Track statistics
+  track_stats: true
