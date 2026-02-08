@@ -1,0 +1,61 @@
+
+   ____                  _ _   _            
+  / ___|___   __ _ _ __ (_) |_(_)_   _____  
+ | |   / _ \ / _` | '_ \| | __| \ \ / / _ \ 
+ | |__| (_) | (_| | | | | | |_| |\ V /  __/ 
+  \____\___/ \__, |_| |_|_|\__|_| \_/ \___| 
+             |___/                           
+   ____                     _ 
+  / ___|_   _  __ _ _ __ __| |
+ | |  _| | | |/ _` | '__/ _` |
+ | |_| | |_| | (_| | | | (_| |
+  \____|\__,_|\__,_|_|  \__,_|
+                                
+
+🧠 Gamified Code Documentation Enforcer
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Analyzes cognitive complexity
+🚫 Blocks undocumented complex code  
+🎮 Gamifies documentation with achievements
+🖥️  Interactive terminal UI
+🪝 Git pre-commit integration
+📈 Track your documentation journey
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+QUICK START:
+  $ pip install cognitive-guard
+  $ cognitive-guard init
+  $ cognitive-guard scan
+
+DOCUMENTATION:
+  📖 README.md          - Overview
+  🚀 QUICKSTART.md      - Getting started  
+  📚 docs/README.md     - User guide
+  🏗️  docs/ARCHITECTURE.md - Technical docs
+
+COMMANDS:
+  init          Initialize in repository
+  check         Check for violations
+  scan          Full codebase scan
+  tui           Interactive assistant
+  stats         View achievements
+  update-hook   Update git hook
+
+FEATURES:
+  ✓ Brain Score calculation (0-20+)
+  ✓ Smart documentation enforcement
+  ✓ Achievement system
+  ✓ Coverage tracking
+  ✓ Multi-language support (extensible)
+  ✓ CI/CD integration
+
+STATUS: ✅ Production Ready
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Version: 0.1.0 | License: MIT
+GitHub: github.com/yourusername/cognitive-guard
+
+Make documentation fun again! 🎉
