@@ -1,0 +1,38 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install black ruff mypy
+    
+    - name: Check code formatting with Black
+      run: |
+        black --check cognitive_guard/ tests/
+    
+    - name: Lint with Ruff
+      run: |
+        ruff check cognitive_guard/ tests/
+    
+    - name: Type check with mypy
+      run: |
+        mypy cognitive_guard/
+      continue-on-error: true  # Don't fail on mypy errors initially

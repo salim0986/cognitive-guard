@@ -50,11 +50,13 @@ class ComplexityAnalyzer:
     def __init__(self) -> None:
         self.complexity = 0
         self.nesting_level = 0
+        self.function_name = None
     
     def analyze_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> ComplexityResult:
         """Analyze complexity of a single function"""
         self.complexity = 0
         self.nesting_level = 0
+        self.function_name = node.name
         
         self._analyze_node(node)
         
@@ -96,11 +98,12 @@ class ComplexityAnalyzer:
             for child in ast.iter_child_nodes(node):
                 self._analyze_node(child)
         
-        # Recursion detection
+        # Recursion detection (only count self-referential calls)
         elif isinstance(node, ast.Call):
-            if isinstance(node.func, ast.Name):
-                # Note: This is simplified. Real recursion detection needs scope analysis
-                self.complexity += 1
+            if isinstance(node.func, ast.Name) and self.function_name:
+                # Only add complexity for recursive calls (same function name)
+                if node.func.id == self.function_name:
+                    self.complexity += 2  # Recursion adds more complexity
             for child in ast.iter_child_nodes(node):
                 self._analyze_node(child)
         
@@ -118,8 +121,21 @@ class ComplexityAnalyzer:
     
     def analyze_file(self, file_path: str) -> List[ComplexityResult]:
         """Analyze all functions in a Python file"""
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
+        import tokenize
+        
+        # Detect encoding to handle non-UTF-8 files
+        try:
+            with open(file_path, 'rb') as f:
+                encoding, _ = tokenize.detect_encoding(f.readline)
+        except Exception:
+            encoding = 'utf-8'
+        
+        try:
+            with open(file_path, "r", encoding=encoding, errors='replace') as f:
+                content = f.read()
+        except Exception as e:
+            # Can't read file, return empty results
+            return []
         
         try:
             tree = ast.parse(content, filename=file_path)
@@ -130,8 +146,12 @@ class ComplexityAnalyzer:
         
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                result = self.analyze_function(node)
-                results.append(result)
+                try:
+                    result = self.analyze_function(node)
+                    results.append(result)
+                except (UnicodeDecodeError, UnicodeEncodeError):
+                    # Skip functions with unicode issues in name
+                    continue
         
         return results
     

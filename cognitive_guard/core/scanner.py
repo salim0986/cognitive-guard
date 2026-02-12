@@ -130,19 +130,37 @@ class CodeScanner:
     
     def __init__(self, config: Config):
         self.config = config
-        self.analyzer = ComplexityAnalyzer()
     
     def should_ignore(self, path: Path) -> bool:
         """Check if path should be ignored"""
         path_str = str(path)
         for pattern in self.config.ignore:
+            # Use Path.match for proper ** glob support
+            if path.match(pattern):
+                return True
+            # Also try fnmatch for patterns without **
             if fnmatch.fnmatch(path_str, pattern):
                 return True
+            # Handle ** at start of pattern for root-level files
+            if pattern.startswith('**/'):
+                simple_pattern = pattern[3:]  # Remove **/
+                if fnmatch.fnmatch(path.name, simple_pattern):
+                    return True
         return False
     
     def scan_file(self, file_path: Path) -> FileResult:
-        """Scan a single file for violations"""
-        results = self.analyzer.analyze_file(str(file_path))
+        """Scan a single file for violations using appropriate parser"""
+        from cognitive_guard.parsers import ParserFactory
+        
+        # Get the appropriate parser for this file
+        parser = ParserFactory.get_parser(str(file_path))
+        
+        if parser is None:
+            # No parser available for this file type
+            return FileResult(file_path=str(file_path), functions=[], violations=[])
+        
+        # Parse the file
+        results = parser.parse_file(str(file_path))
         
         violations = [
             result for result in results
@@ -163,7 +181,17 @@ class CodeScanner:
         except Exception:
             return ScanResults(config=self.config)
         
-        staged_files = [item.a_path for item in repo.index.diff("HEAD")]
+        # Get staged files - handle case where HEAD doesn't exist (initial commit)
+        try:
+            # Try to diff against HEAD
+            staged_files = [item.a_path for item in repo.index.diff("HEAD")]
+        except Exception:
+            # HEAD doesn't exist (initial commit), get all staged files
+            try:
+                staged_files = [item[0] for item in repo.index.entries.keys()]
+            except Exception:
+                # Fallback: return empty results if git operations fail
+                return ScanResults(config=self.config)
         
         file_results: List[FileResult] = []
         
@@ -184,13 +212,26 @@ class CodeScanner:
         """Scan all files in the project"""
         file_results: List[FileResult] = []
         
-        # For now, only scan Python files
-        for py_file in Path.cwd().rglob("*.py"):
-            if self.should_ignore(py_file):
-                continue
-            
-            result = self.scan_file(py_file)
-            if result.functions:
-                file_results.append(result)
+        # Define file extensions to scan based on config
+        extensions = []
+        for lang in self.config.languages:
+            if lang == "python":
+                extensions.extend(["*.py", "*.pyi"])
+            elif lang == "javascript":
+                extensions.extend(["*.js", "*.jsx", "*.mjs"])
+            elif lang == "typescript":
+                extensions.extend(["*.ts", "*.tsx"])
+            elif lang == "java":
+                extensions.append("*.java")
+        
+        # Scan files with matching extensions
+        for pattern in extensions:
+            for file_path in Path.cwd().rglob(pattern):
+                if self.should_ignore(file_path):
+                    continue
+                
+                result = self.scan_file(file_path)
+                if result.functions:
+                    file_results.append(result)
         
         return ScanResults(files=file_results, config=self.config)

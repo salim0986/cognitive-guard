@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 authors = [
-    { name = "Your Name", email = "your.email@example.com" }
+    { name = "Mohd Saalim", email = "salimansari0986@gmail.com" }
 ]
 keywords = ["documentation", "git-hooks", "code-quality", "cognitive-complexity", "cli"]
 classifiers = [
@@ -52,7 +52,7 @@ cognitive-guard = "cognitive_guard.cli:main"
 cg = "cognitive_guard.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/cognitive-guard"
+Homepage = "https://github.com/salim0986/cognitive-guard"
 Documentation = "https://cognitive-guard.readthedocs.io"
 Repository = "https://github.com/yourusername/cognitive-guard"
 Issues = "https://github.com/yourusername/cognitive-guard/issues"

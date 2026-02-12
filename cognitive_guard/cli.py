@@ -122,7 +122,22 @@ def tui() -> None:
     """Launch interactive documentation assistant"""
     try:
         config = Config.load()
-        app = CognitiveGuardApp(config)
+        scanner = CodeScanner(config)
+        
+        console.print("[bold cyan]🔍 Scanning for violations...[/bold cyan]")
+        results = scanner.scan_all()
+        
+        violations_count = results.get_total_violations()
+        
+        if violations_count == 0:
+            console.print("[bold green]✅ No violations found![/bold green]")
+            console.print("All complex functions are properly documented.")
+            return
+        
+        console.print(f"[yellow]Found {violations_count} violation(s)[/yellow]")
+        console.print("[bold]Launching interactive TUI...[/bold]\n")
+        
+        app = CognitiveGuardApp(config, results)
         app.run()
         
     except FileNotFoundError:
