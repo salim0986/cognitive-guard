@@ -1,0 +1,15 @@
+complexity_threshold: 10
+target_coverage: 0.9
+languages:
+- python
+- javascript
+- typescript
+- java
+ignore:
+- '**/test_*.py'
+- '**/*.test.js'
+- '**/migrations/**'
+gamification:
+  enabled: true
+  show_achievements: true
+  track_stats: true

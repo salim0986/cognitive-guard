@@ -16,11 +16,43 @@ class HookInstaller:
 
 import sys
 import subprocess
+import shutil
+from pathlib import Path
 
 def main():
+    print("\\n🧠 Running Cognitive Guard...\\n", flush=True)
+    
+    # Try to find cognitive-guard in common locations
+    cmd = shutil.which("cognitive-guard")
+    
+    if not cmd:
+        # Try virtual environment in current and parent directories
+        hook_path = Path(__file__).resolve()
+        repo_root = hook_path.parent.parent.parent  # From .git/hooks/pre-commit to repo root
+        
+        # Look for venv in repo and parent directories
+        search_dirs = [repo_root, repo_root.parent, repo_root.parent.parent]
+        venv_names = [".venv", "venv", "env"]
+        
+        for search_dir in search_dirs:
+            for venv_name in venv_names:
+                venv_cmd = search_dir / venv_name / "bin" / "cognitive-guard"
+                if venv_cmd.exists():
+                    cmd = str(venv_cmd)
+                    break
+            if cmd:
+                break
+    
+    if not cmd:
+        print("ERROR: cognitive-guard not found!", file=sys.stderr)
+        print("Please ensure cognitive-guard is installed and in PATH", file=sys.stderr)
+        print("Or activate your virtual environment before committing", file=sys.stderr)
+        sys.exit(1)
+    
     result = subprocess.run(
-        ["cognitive-guard", "hook"],
-        capture_output=False
+        [cmd, "hook"],
+        stdout=sys.stdout,
+        stderr=sys.stderr
     )
     sys.exit(result.returncode)
 

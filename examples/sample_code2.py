@@ -146,7 +146,3 @@ class ExampleClass:
                     result.append(item)
         
         return result
-# test
-# another test
-test
-# final test

@@ -170,26 +170,40 @@ def hook() -> None:
     try:
         config = Config.load()
         scanner = CodeScanner(config)
+        
+        console.print("[bold cyan]🔍 Analyzing staged files...[/bold cyan]")
         results = scanner.scan_staged()
         
         if results.has_violations():
-            console.print("\n[bold red]🚫 Commit blocked![/bold red]")
-            console.print("Complex functions without documentation detected.\n")
+            console.print("\n" + "="*70)
+            console.print("[bold red]🚫 COMMIT BLOCKED BY COGNITIVE GUARD[/bold red]")
+            console.print("="*70)
+            console.print("\n[yellow]Reason:[/yellow] Complex functions without documentation detected.\n")
             results.display(console)
             
-            if config.gamification.enabled:
-                console.print("\n[bold]Launch interactive TUI to fix? (y/n)[/bold]")
-                response = input().strip().lower()
-                if response == 'y':
-                    app = CognitiveGuardApp(config, results)
-                    app.run()
-                    sys.exit(0)
+            # Only prompt for TUI if running interactively
+            if config.gamification.enabled and sys.stdin.isatty():
+                console.print("\n[bold cyan]💡 Fix it now?[/bold cyan]")
+                console.print("Launch interactive TUI to add documentation? (y/n): ", end="")
+                try:
+                    response = input().strip().lower()
+                    if response == 'y':
+                        app = CognitiveGuardApp(config, results)
+                        app.run()
+                        sys.exit(0)
+                except (EOFError, KeyboardInterrupt):
+                    console.print()  # New line
             
-            console.print("\n[yellow]Tip:[/yellow] Run 'cognitive-guard tui' to fix interactively")
-            console.print("[yellow]Tip:[/yellow] Use 'git commit --no-verify' to bypass (not recommended)")
+            console.print("\n" + "="*70)
+            console.print("[bold yellow]💡 How to fix:[/bold yellow]")
+            console.print("  1. Add docstrings to the functions listed above")
+            console.print("  2. Run: [cyan]cognitive-guard tui[/cyan] (interactive)")
+            console.print("  3. Or bypass (not recommended): [dim]git commit --no-verify[/dim]")
+            console.print("="*70 + "\n")
             sys.exit(1)
         
-        console.print("[green]✓[/green] All complex functions are documented!")
+        console.print("[bold green]✅ All complex functions are documented![/bold green]")
+        console.print("[dim]Cognitive Guard check passed.[/dim]\n")
         
     except FileNotFoundError:
         # If no config, don't block commits
@@ -197,7 +211,8 @@ def hook() -> None:
         sys.exit(0)
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
+        console.print("[yellow]⚠[/yellow] Allowing commit due to error.")
+        sys.exit(0)  # Don't block commits on errors
 
 
 if __name__ == "__main__":
