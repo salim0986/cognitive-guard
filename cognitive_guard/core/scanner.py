@@ -146,6 +146,14 @@ class CodeScanner:
                 simple_pattern = pattern[3:]  # Remove **/
                 if fnmatch.fnmatch(path.name, simple_pattern):
                     return True
+            # Check if any parent directory matches pattern
+            # e.g., **/__pycache__/** should match __pycache__/file.pyc
+            if '__pycache__' in pattern and '__pycache__' in path_str:
+                return True
+            # Check if path contains any part of the pattern
+            for part in path.parts:
+                if fnmatch.fnmatch(part, pattern.replace('**/', '').replace('/**', '')):
+                    return True
         return False
     
     def scan_file(self, file_path: Path) -> FileResult:
