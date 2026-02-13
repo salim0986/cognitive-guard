@@ -27,10 +27,10 @@ def main() -> None:
 
 @main.command()
 @click.option("--force", is_flag=True, help="Overwrite existing configuration")
-def init(force: bool) -> None:
+@click.option("--interactive", "-i", is_flag=True, help="Interactive setup with questions")
+def init(force: bool, interactive: bool) -> None:
     """Initialize Cognitive Guard in the current repository"""
     try:
-        config = Config.create_default()
         config_path = Path.cwd() / ".cognitive-guard.yml"
         
         if config_path.exists() and not force:
@@ -39,18 +39,66 @@ def init(force: bool) -> None:
             )
             sys.exit(1)
         
+        if interactive:
+            console.print("[bold cyan]Welcome! Let's set up Cognitive Guard.[/bold cyan]")
+            console.print("I'll ask 3 quick questions:\n")
+            
+            # Question 1: Language
+            console.print("[bold]1. What language is your project?[/bold]")
+            language_choice = click.prompt(
+                "   Choose",
+                type=click.Choice(["python", "javascript", "typescript", "all"], case_sensitive=False),
+                default="python"
+            )
+            
+            if language_choice == "all":
+                languages = ["python", "javascript", "typescript", "java"]
+            else:
+                languages = [language_choice]
+            
+            # Question 2: Strictness
+            console.print("\n[bold]2. How strict should documentation be?[/bold]")
+            console.print("   Relaxed (threshold: 15) - Only very complex code")
+            console.print("   Balanced (threshold: 10) - Moderate complexity")
+            console.print("   Strict (threshold: 5) - Most functions")
+            strictness = click.prompt(
+                "   Choose",
+                type=click.Choice(["relaxed", "balanced", "strict"], case_sensitive=False),
+                default="balanced"
+            )
+            
+            threshold_map = {"relaxed": 15, "balanced": 10, "strict": 5}
+            threshold = threshold_map[strictness]
+            
+            # Question 3: Git hook
+            console.print("\n[bold]3. Install git hook to enforce on commits?[/bold]")
+            install_hook = click.confirm("   ", default=True)
+            
+            # Create config with chosen values
+            config = Config.create_default()
+            config.complexity_threshold = threshold
+            config.languages = languages
+            
+        else:
+            config = Config.create_default()
+            install_hook = True
+        
         config.save(config_path)
-        console.print(f"[green]✓[/green] Created configuration: {config_path}")
+        console.print(f"\n[green]✓[/green] Created configuration: {config_path}")
         
         # Install git hook
-        installer = HookInstaller()
-        if installer.install():
-            console.print("[green]✓[/green] Installed pre-commit hook")
-        else:
-            console.print("[yellow]⚠[/yellow] Could not install git hook (not a git repo?)")
+        if interactive and install_hook or not interactive:
+            installer = HookInstaller()
+            if installer.install():
+                console.print("[green]✓[/green] Installed pre-commit hook")
+            else:
+                console.print("[yellow]⚠[/yellow] Could not install git hook (not a git repo?)")
         
         console.print("\n[bold green]🎉 Cognitive Guard initialized successfully![/bold green]")
-        console.print("Edit .cognitive-guard.yml to customize settings.")
+        console.print("\n[bold]Next steps:[/bold]")
+        console.print("  • Run [cyan]cognitive-guard scan[/cyan] to check your code")
+        console.print("  • Run [cyan]cognitive-guard demo[/cyan] to see a quick demo")
+        console.print("  • Edit .cognitive-guard.yml to customize settings")
         
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
@@ -81,7 +129,11 @@ def check(staged: bool, json_output: bool) -> None:
             sys.exit(1)
             
     except FileNotFoundError:
-        console.print("[red]Error:[/red] No .cognitive-guard.yml found. Run 'cognitive-guard init' first.")
+        console.print("\n[red]❌ Configuration Error:[/red] No .cognitive-guard.yml found")
+        console.print("\n[bold]How to fix:[/bold]")
+        console.print("  1. Run: [cyan]cognitive-guard init --interactive[/cyan]")
+        console.print("  2. Or run: [cyan]cognitive-guard init[/cyan] for quick setup")
+        console.print("\n[dim]This will create .cognitive-guard.yml with default settings[/dim]")
         sys.exit(1)
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
@@ -110,7 +162,11 @@ def scan(fail_under: Optional[float]) -> None:
         console.print(f"\n[green]✓[/green] Scan complete!")
         
     except FileNotFoundError:
-        console.print("[red]Error:[/red] No .cognitive-guard.yml found. Run 'cognitive-guard init' first.")
+        console.print("\n[red]❌ Configuration Error:[/red] No .cognitive-guard.yml found")
+        console.print("\n[bold]How to fix:[/bold]")
+        console.print("  1. Run: [cyan]cognitive-guard init --interactive[/cyan]")
+        console.print("  2. Or run: [cyan]cognitive-guard init[/cyan] for quick setup")
+        console.print("\n[dim]This will create .cognitive-guard.yml with default settings[/dim]")
         sys.exit(1)
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
@@ -141,7 +197,11 @@ def tui() -> None:
         app.run()
         
     except FileNotFoundError:
-        console.print("[red]Error:[/red] No .cognitive-guard.yml found. Run 'cognitive-guard init' first.")
+        console.print("\n[red]❌ Configuration Error:[/red] No .cognitive-guard.yml found")
+        console.print("\n[bold]How to fix:[/bold]")
+        console.print("  1. Run: [cyan]cognitive-guard init --interactive[/cyan]")
+        console.print("  2. Or run: [cyan]cognitive-guard init[/cyan] for quick setup")
+        console.print("\n[dim]This will create .cognitive-guard.yml with default settings[/dim]")
         sys.exit(1)
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
@@ -157,11 +217,96 @@ def stats() -> None:
         tracker.display(console)
         
     except FileNotFoundError:
-        console.print("[red]Error:[/red] No .cognitive-guard.yml found. Run 'cognitive-guard init' first.")
+        console.print("\n[red]❌ Configuration Error:[/red] No .cognitive-guard.yml found")
+        console.print("\n[bold]How to fix:[/bold]")
+        console.print("  1. Run: [cyan]cognitive-guard init --interactive[/cyan]")
+        console.print("  2. Or run: [cyan]cognitive-guard init[/cyan] for quick setup")
+        console.print("\n[dim]This will create .cognitive-guard.yml with default settings[/dim]")
         sys.exit(1)
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
         sys.exit(1)
+
+
+@main.command()
+def demo() -> None:
+    """Run a quick demonstration of Cognitive Guard"""
+    import tempfile
+    import shutil
+    import os
+    from textwrap import dedent
+    
+    console.print("[bold cyan]🎬 Cognitive Guard Demo[/bold cyan]\n")
+    console.print("Let me show you how Cognitive Guard works in 30 seconds!\n")
+    
+    # Create temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        demo_dir = Path(tmpdir) / "demo_project"
+        demo_dir.mkdir()
+        
+        # Create sample file with violations
+        sample_file = demo_dir / "example.py"
+        sample_code = dedent('''
+            def simple_function():
+                """This function is properly documented."""
+                return "Hello"
+            
+            def complex_function(data, options, callback, timeout=30):
+                # This function is complex but has NO docstring!
+                result = []
+                if data:
+                    for item in data:
+                        if options.get("validate"):
+                            if callback(item):
+                                if timeout > 0:
+                                    result.append(item)
+                                else:
+                                    continue
+                        else:
+                            result.append(item)
+                return result
+        ''')
+        sample_file.write_text(sample_code)
+        
+        console.print("[bold]📝 Sample code created:[/bold]")
+        console.print(f"[dim]{sample_file}[/dim]\n")
+        
+        # Show the violation
+        console.print("[bold yellow]❌ Found a violation:[/bold yellow]")
+        console.print("Function [cyan]complex_function[/cyan] has high complexity (15) but no docstring!\n")
+        
+        # Show what good documentation looks like
+        console.print("[bold green]✅ What good documentation looks like:[/bold green]")
+        good_example = dedent('''
+            def complex_function(data, options, callback, timeout=30):
+                """Filter data items using callback with validation.
+                
+                Args:
+                    data: List of items to filter
+                    options: Dictionary with 'validate' flag
+                    callback: Function to validate each item
+                    timeout: Timeout in seconds (default: 30)
+                    
+                Returns:
+                    List of filtered items that passed validation
+                    
+                Example:
+                    >>> complex_function([1,2,3], {"validate": True}, lambda x: x > 1)
+                    [2, 3]
+                """
+                # implementation...
+        ''')
+        console.print(f"[dim]{good_example}[/dim]")
+        
+        console.print("\n[bold cyan]💡 Key Features:[/bold cyan]")
+        console.print("  • [green]✓[/green] Detects complex code automatically")
+        console.print("  • [green]✓[/green] Blocks commits with undocumented code")
+        console.print("  • [green]✓[/green] Interactive TUI to fix issues")
+        console.print("  • [green]✓[/green] Track progress with gamification")
+        
+        console.print("\n[bold]Ready to try it on your code?[/bold]")
+        console.print("Run: [cyan]cognitive-guard init --interactive[/cyan]")
+        console.print("     [cyan]cognitive-guard scan[/cyan]\n")
 
 
 @main.command()

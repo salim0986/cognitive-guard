@@ -142,19 +142,55 @@ class StatsTracker:
                 achievement.unlocked_at = datetime.now().isoformat()
     
     def display(self, console: Console) -> None:
-        """Display statistics and achievements"""
+        """Display statistics and achievements with visual progress"""
+        from cognitive_guard.core.scanner import CodeScanner
+        from rich.progress import Progress, BarColumn, TextColumn
+        
+        # Get current coverage
+        scanner = CodeScanner(self.config)
+        try:
+            results = scanner.scan_all()
+            current_coverage = results.get_coverage()
+            target_coverage = self.config.target_coverage
+        except Exception:
+            current_coverage = 0.0
+            target_coverage = 0.9
+        
+        # Visual Progress Section
+        console.print("\n[bold cyan]📊 Your Documentation Journey[/bold cyan]\n")
+        
+        # Create progress visualization
+        coverage_percent = int(current_coverage * 100)
+        target_percent = int(target_coverage * 100)
+        
+        # Progress bar
+        bar_length = 10
+        filled = int((current_coverage / target_coverage) * bar_length) if target_coverage > 0 else 0
+        filled = min(filled, bar_length)
+        bar = "█" * filled + "░" * (bar_length - filled)
+        
+        console.print(f"   Current:  {bar} {coverage_percent}% documented ← You are here")
+        console.print(f"   Goal:     {'█' * bar_length} {target_percent}% documented\n")
+        
+        # Calculate functions to go
+        if current_coverage < target_coverage and hasattr(results, 'total_functions'):
+            total_funcs = getattr(results, 'total_functions', 0)
+            documented = int(total_funcs * current_coverage)
+            needed = int(total_funcs * target_coverage) - documented
+            if needed > 0:
+                console.print(f"   🎯 Just {needed} more function(s) to reach your goal!\n")
         
         # Stats panel
         stats_text = f"""
-[bold]📊 Your Documentation Journey[/bold]
+[bold]📈 Statistics[/bold]
 
-Functions Documented: {self.stats.total_functions_documented}
-Commits with Guard: {self.stats.total_commits_with_guard}
-Highest Complexity: {self.stats.highest_complexity_documented}
-Current Streak: {self.stats.current_streak_days} days
+Functions Documented: [cyan]{self.stats.total_functions_documented}[/cyan]
+Commits with Guard: [cyan]{self.stats.total_commits_with_guard}[/cyan]
+Highest Complexity: [cyan]{self.stats.highest_complexity_documented}[/cyan]
+Current Streak: [cyan]{self.stats.current_streak_days} days[/cyan]
         """.strip()
         
-        console.print(Panel(stats_text, title="Statistics", border_style="green"))
+        console.print(Panel(stats_text, border_style="green"))
         
         # Achievements table
         table = Table(title="\n🏆 Achievements", show_header=True)
@@ -173,3 +209,4 @@ Current Streak: {self.stats.current_streak_days} days
             )
         
         console.print(table)
+        console.print()
