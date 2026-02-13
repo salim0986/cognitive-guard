@@ -1,8 +1,9 @@
 """Test fixtures for Cognitive Guard tests"""
 
-import pytest
-from pathlib import Path
 import tempfile
+from pathlib import Path
+
+import pytest
 
 from cognitive_guard.core.config import Config
 
@@ -24,7 +25,7 @@ def default_config():
 def sample_python_file(temp_dir):
     """Create a sample Python file for testing"""
     file_path = temp_dir / "sample.py"
-    
+
     content = '''
 def simple_function():
     """A simple documented function"""
@@ -46,7 +47,7 @@ def complex_function(a, b, c, d):
             result = a
     return result
 '''
-    
+
     file_path.write_text(content)
     return file_path
 
